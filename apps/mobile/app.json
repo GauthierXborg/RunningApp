@@ -12,9 +12,14 @@
       "bundleIdentifier": "com.runningapp.mobile",
       "usesAppleSignIn": true
     },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
     "plugins": [
       "expo-router",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-web-browser"
     ]
   }
 }

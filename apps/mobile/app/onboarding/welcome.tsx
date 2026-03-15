@@ -10,24 +10,38 @@ export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.hero}>
-          <View style={styles.iconContainer}>
-            <Feather name="activity" size={48} color={Colors.primary} />
+    <SafeAreaView className="flex-1 bg-bg">
+      <View className="flex-1 px-7 justify-between">
+        <View className="flex-1 justify-center items-center">
+          <View style={styles.iconRing} className="mb-8">
+            <View className="w-[88px] h-[88px] rounded-full bg-surface justify-center items-center">
+              <Feather name="zap" size={40} color={Colors.primary} />
+            </View>
           </View>
-          <Text style={styles.title}>RunningApp</Text>
-          <Text style={styles.tagline}>Your personal running coach</Text>
+          <Text className="text-4xl font-extrabold text-textPrimary mb-2" style={styles.title}>
+            Start Your
+          </Text>
+          <Text className="text-4xl font-extrabold text-accent mb-3" style={styles.title}>
+            Running Journey
+          </Text>
+          <Text className="text-lg font-medium text-accent mb-4">
+            Your personal running coach
+          </Text>
+          <Text className="text-[15px] text-textMuted text-center leading-[22px] px-5">
+            Build a training plan tailored to your goals, track your progress, and crush your next race.
+          </Text>
         </View>
 
-        <View style={styles.buttons}>
+        <View className="pb-8">
           <PrimaryButton
             title="Sign in with Apple"
+            icon="smartphone"
             onPress={() => router.push('/onboarding/profile')}
           />
-          <View style={{ height: 12 }} />
+          <View className="h-3" />
           <PrimaryButton
             title="Continue with Email"
+            icon="mail"
             variant="secondary"
             onPress={() => router.push('/onboarding/profile')}
           />
@@ -38,41 +52,16 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'space-between',
-  },
-  hero: {
-    flex: 1,
+  iconRing: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.textSecondary,
-  },
-  buttons: {
-    paddingBottom: 32,
+    letterSpacing: -0.5,
   },
 });

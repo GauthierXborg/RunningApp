@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { ChipSelector } from '../../components/ChipSelector';
 import { TimeInput } from '../../components/TimeInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { Card } from '../../components/Card';
 import { useApp, RunnerProfile } from '../../contexts/AppContext';
 import { connectStrava } from '../../lib/strava';
 
@@ -62,7 +64,6 @@ export default function SettingsScreen() {
   );
   const [useImperial, setUseImperial] = useState(profile?.useImperial ?? false);
 
-  // Sync local state when profile changes externally
   useEffect(() => {
     if (profile) {
       setTargetDistance(profile.targetDistance);
@@ -127,9 +128,18 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.sectionTitle}>Target distance</Text>
+    <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text className="text-2xl font-bold text-textPrimary mb-2" style={styles.tracking}>
+          Settings
+        </Text>
+
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Target distance
+        </Text>
         <ChipSelector
           options={DISTANCE_OPTIONS}
           selected={targetDistance}
@@ -139,34 +149,37 @@ export default function SettingsScreen() {
           }}
         />
 
-        <Text style={styles.sectionTitle}>Recent 5K time</Text>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>I don't know</Text>
-          <Switch
-            value={dontKnowTime}
-            onValueChange={(v) => {
-              setDontKnowTime(v);
-              if (v) saveProfile({ fiveKSeconds: null });
-            }}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor={Colors.text}
-          />
-        </View>
-        {!dontKnowTime && (
-          <TimeInput
-            minutes={minutes}
-            seconds={seconds}
-            onChangeMinutes={(v) => {
-              setMinutes(v);
-              // Save on blur would be better, but save after short delay
-            }}
-            onChangeSeconds={(v) => {
-              setSeconds(v);
-            }}
-          />
-        )}
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Recent 5K time
+        </Text>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-[15px] font-medium text-textPrimary">I don't know my time</Text>
+            <Switch
+              value={dontKnowTime}
+              onValueChange={(v) => {
+                setDontKnowTime(v);
+                if (v) saveProfile({ fiveKSeconds: null });
+              }}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.text}
+            />
+          </View>
+          {!dontKnowTime && (
+            <View className="mt-4 items-center">
+              <TimeInput
+                minutes={minutes}
+                seconds={seconds}
+                onChangeMinutes={(v) => setMinutes(v)}
+                onChangeSeconds={(v) => setSeconds(v)}
+              />
+            </View>
+          )}
+        </Card>
 
-        <Text style={styles.sectionTitle}>Experience level</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Experience level
+        </Text>
         <ChipSelector
           options={EXPERIENCE_OPTIONS}
           selected={experienceLevel}
@@ -176,30 +189,36 @@ export default function SettingsScreen() {
           }}
         />
 
-        <Text style={styles.sectionTitle}>Days per week</Text>
-        <View style={styles.sliderTrack}>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Days per week
+        </Text>
+        <View className="flex-row justify-between items-center bg-surface rounded-2xl p-1.5 border border-divider">
           {[3, 4, 5, 6, 7].map((n) => (
-            <View
+            <TouchableOpacity
               key={n}
-              style={[styles.sliderDot, n === daysPerWeek && styles.sliderDotActive]}
+              className={`flex-1 items-center py-3.5 rounded-xl ${
+                n === daysPerWeek ? 'bg-accent' : ''
+              }`}
+              onPress={() => {
+                setDaysPerWeek(n);
+                saveProfile({ daysPerWeek: n });
+              }}
+              activeOpacity={0.7}
             >
               <Text
-                style={[
-                  styles.sliderLabel,
-                  n === daysPerWeek && styles.sliderLabelActive,
-                ]}
-                onPress={() => {
-                  setDaysPerWeek(n);
-                  saveProfile({ daysPerWeek: n });
-                }}
+                className={`text-lg font-bold ${
+                  n === daysPerWeek ? 'text-bg' : 'text-textMuted'
+                }`}
               >
                 {n}
               </Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Plan duration</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Plan duration
+        </Text>
         <ChipSelector
           options={DURATION_OPTIONS}
           selected={planDuration}
@@ -209,7 +228,9 @@ export default function SettingsScreen() {
           }}
         />
 
-        <Text style={styles.sectionTitle}>Rest days</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Rest days
+        </Text>
         <ChipSelector
           options={DAY_OPTIONS}
           selected={null}
@@ -222,40 +243,67 @@ export default function SettingsScreen() {
           }}
         />
 
-        <Text style={styles.sectionTitle}>Units</Text>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>
-            {useImperial ? 'Miles' : 'Kilometres'}
-          </Text>
-          <Switch
-            value={useImperial}
-            onValueChange={(v) => {
-              setUseImperial(v);
-              saveProfile({ useImperial: v });
-            }}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor={Colors.text}
-          />
-        </View>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Units
+        </Text>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-[15px] font-medium text-textPrimary">
+              {useImperial ? 'Miles' : 'Kilometres'}
+            </Text>
+            <Switch
+              value={useImperial}
+              onValueChange={(v) => {
+                setUseImperial(v);
+                saveProfile({ useImperial: v });
+              }}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.text}
+            />
+          </View>
+        </Card>
 
-        <Text style={styles.sectionTitle}>Strava</Text>
-        {stravaToken ? (
-          <PrimaryButton
-            title="Disconnect Strava"
-            variant="secondary"
-            onPress={handleDisconnectStrava}
-          />
-        ) : (
-          <PrimaryButton
-            title="Connect Strava"
-            onPress={handleConnectStrava}
-            loading={connecting}
-          />
-        )}
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Integrations
+        </Text>
+        <Card>
+          <View className="flex-row items-center" style={styles.stravaGap}>
+            <View className="w-11 h-11 rounded-[14px] bg-surfaceLight justify-center items-center">
+              <Feather
+                name={stravaToken ? 'check-circle' : 'link'}
+                size={20}
+                color={stravaToken ? Colors.success : Colors.textMuted}
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-textPrimary">Strava</Text>
+              <Text className="text-[13px] text-textMuted mt-0.5">
+                {stravaToken ? 'Connected' : 'Not connected'}
+              </Text>
+            </View>
+          </View>
+          <View className="mt-4">
+            {stravaToken ? (
+              <PrimaryButton
+                title="Disconnect"
+                variant="secondary"
+                onPress={handleDisconnectStrava}
+              />
+            ) : (
+              <PrimaryButton
+                title="Connect Strava"
+                icon="link"
+                onPress={handleConnectStrava}
+                loading={connecting}
+              />
+            )}
+          </View>
+        </Card>
 
-        <View style={styles.regenSection}>
+        <View className="mt-8">
           <PrimaryButton
             title="Regenerate Plan"
+            icon="refresh-cw"
             variant="secondary"
             onPress={() =>
               Alert.alert('Coming soon', 'Plan regeneration coming soon.')
@@ -268,57 +316,15 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingTop: 16,
+    paddingBottom: 48,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: 24,
-    marginBottom: 12,
+  tracking: {
+    letterSpacing: -0.3,
   },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  toggleLabel: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-  },
-  sliderTrack: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 8,
-  },
-  sliderDot: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  sliderDotActive: {
-    backgroundColor: Colors.primary,
-  },
-  sliderLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  sliderLabelActive: {
-    color: Colors.background,
-  },
-  regenSection: {
-    marginTop: 32,
+  stravaGap: {
+    gap: 14,
   },
 });

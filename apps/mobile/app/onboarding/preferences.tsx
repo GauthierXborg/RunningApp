@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChipSelector } from '../../components/ChipSelector';
@@ -72,45 +72,58 @@ export default function PreferencesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-bg" edges={['bottom']}>
       <ScrollView
-        style={styles.scroll}
+        className="flex-1"
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Days per week</Text>
-        <View style={styles.sliderContainer}>
-          <View style={styles.sliderTrack}>
-            {[3, 4, 5, 6, 7].map((n) => (
-              <View
-                key={n}
-                style={[
-                  styles.sliderDot,
-                  n === daysPerWeek && styles.sliderDotActive,
-                ]}
+        <Text className="text-2xl font-bold text-textPrimary" style={styles.tracking}>
+          Training preferences
+        </Text>
+        <Text className="text-[15px] text-textMuted mt-1 mb-2">
+          Set up your ideal training schedule
+        </Text>
+
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Days per week
+        </Text>
+        <View className="flex-row justify-between items-center bg-surface rounded-2xl p-1.5 border border-divider">
+          {[3, 4, 5, 6, 7].map((n) => (
+            <TouchableOpacity
+              key={n}
+              className={`flex-1 items-center py-3.5 rounded-xl ${
+                n === daysPerWeek ? 'bg-accent' : ''
+              }`}
+              onPress={() => setDaysPerWeek(n)}
+              activeOpacity={0.7}
+            >
+              <Text
+                className={`text-lg font-bold ${
+                  n === daysPerWeek ? 'text-bg' : 'text-textMuted'
+                }`}
               >
-                <Text
-                  style={[
-                    styles.sliderLabel,
-                    n === daysPerWeek && styles.sliderLabelActive,
-                  ]}
-                  onPress={() => setDaysPerWeek(n)}
-                >
-                  {n}
-                </Text>
-              </View>
-            ))}
-          </View>
+                {n}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Plan duration</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Plan duration
+        </Text>
         <ChipSelector
           options={DURATION_OPTIONS}
           selected={planDuration}
           onSelect={setPlanDuration}
         />
 
-        <Text style={styles.sectionTitle}>Rest days</Text>
-        <Text style={styles.hint}>Select days you prefer not to train</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Rest days
+        </Text>
+        <Text className="text-[13px] text-textMuted mb-3 -mt-1">
+          Select days you prefer not to train
+        </Text>
         <ChipSelector
           options={DAY_OPTIONS}
           selected={null}
@@ -121,7 +134,7 @@ export default function PreferencesScreen() {
         />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View className="px-6 pb-4 pt-2">
         <PrimaryButton title="Continue" onPress={handleContinue} />
       </View>
     </SafeAreaView>
@@ -129,60 +142,12 @@ export default function PreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  hint: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginBottom: 12,
-  },
-  sliderContainer: {
-    paddingVertical: 8,
-  },
-  sliderTrack: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 8,
-  },
-  sliderDot: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  sliderDotActive: {
-    backgroundColor: Colors.primary,
-  },
-  sliderLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  sliderLabelActive: {
-    color: Colors.background,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+  tracking: {
+    letterSpacing: -0.3,
   },
 });

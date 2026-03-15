@@ -32,7 +32,7 @@ export function ChipSelector({
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row flex-wrap" style={styles.gap}>
       {options.map((option) => {
         const isSelected = multi
           ? selectedValues.includes(option.value)
@@ -40,10 +40,21 @@ export function ChipSelector({
         return (
           <TouchableOpacity
             key={option.value}
-            style={[styles.chip, isSelected && styles.chipSelected]}
+            className={`px-[22px] py-3 rounded-full border-[1.5px] ${
+              isSelected
+                ? 'bg-accent border-accent'
+                : 'bg-surface border-divider'
+            }`}
             onPress={() => handlePress(option.value)}
+            activeOpacity={0.7}
           >
-            <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+            <Text
+              className={`text-[15px] ${
+                isSelected
+                  ? 'text-bg font-semibold'
+                  : 'text-textSecondary font-medium'
+              }`}
+            >
               {option.label}
             </Text>
           </TouchableOpacity>
@@ -54,30 +65,7 @@ export function ChipSelector({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  chipSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  chipText: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: Colors.textSecondary,
-  },
-  chipTextSelected: {
-    color: Colors.background,
-    fontWeight: '600',
+  gap: {
+    gap: 10,
   },
 });

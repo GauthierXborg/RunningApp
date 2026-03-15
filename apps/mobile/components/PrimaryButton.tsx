@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 
 interface PrimaryButtonProps {
@@ -8,6 +9,7 @@ interface PrimaryButtonProps {
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
   loading?: boolean;
+  icon?: keyof typeof Feather.glyphMap;
 }
 
 export function PrimaryButton({
@@ -16,62 +18,39 @@ export function PrimaryButton({
   variant = 'primary',
   disabled = false,
   loading = false,
+  icon,
 }: PrimaryButtonProps) {
   const isPrimary = variant === 'primary';
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        isPrimary ? styles.primary : styles.secondary,
-        disabled && styles.disabled,
-      ]}
+      className={`rounded-2xl py-[18px] items-center justify-center w-full ${
+        isPrimary ? 'bg-accent' : 'bg-surface border-[1.5px] border-divider'
+      } ${disabled ? 'opacity-40' : ''}`}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
       {loading ? (
         <ActivityIndicator color={isPrimary ? Colors.background : Colors.primary} />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            isPrimary ? styles.primaryText : styles.secondaryText,
-          ]}
-        >
-          {title}
-        </Text>
+        <View className="flex-row items-center">
+          {icon && (
+            <Feather
+              name={icon}
+              size={18}
+              color={isPrimary ? Colors.background : Colors.text}
+              style={{ marginRight: 8 }}
+            />
+          )}
+          <Text
+            className={`text-[17px] font-semibold tracking-wide ${
+              isPrimary ? 'text-bg' : 'text-textPrimary'
+            }`}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  primary: {
-    backgroundColor: Colors.primary,
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  primaryText: {
-    color: Colors.background,
-  },
-  secondaryText: {
-    color: Colors.primary,
-  },
-});
