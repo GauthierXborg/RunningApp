@@ -30,8 +30,10 @@ export default function PreferencesScreen() {
     fiveKSeconds: string;
     experienceLevel: string;
     useImperial: string;
+    regenerate?: string;
   }>();
-  const { profile, setProfile } = useApp();
+  const { profile, setProfile, regeneratePlan, onboardingComplete } = useApp();
+  const isRegenerate = params.regenerate === '1' || onboardingComplete;
 
   const [daysPerWeek, setDaysPerWeek] = useState(profile?.daysPerWeek ?? 4);
   const [planDuration, setPlanDuration] = useState<string | null>(
@@ -68,7 +70,14 @@ export default function PreferencesScreen() {
     };
 
     await setProfile(newProfile);
-    router.push('/onboarding/strava');
+
+    if (isRegenerate) {
+      // Regenerate plan and go back to tabs
+      await regeneratePlan();
+      router.replace('/(tabs)');
+    } else {
+      router.push('/onboarding/strava');
+    }
   };
 
   return (
@@ -135,7 +144,7 @@ export default function PreferencesScreen() {
       </ScrollView>
 
       <View className="px-6 pb-4 pt-2">
-        <PrimaryButton title="Continue" onPress={handleContinue} />
+        <PrimaryButton title={isRegenerate ? 'Generate Plan' : 'Continue'} onPress={handleContinue} />
       </View>
     </SafeAreaView>
   );

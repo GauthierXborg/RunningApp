@@ -1,104 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { ChipSelector } from '../../components/ChipSelector';
-import { TimeInput } from '../../components/TimeInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { Card } from '../../components/Card';
-import { useApp, RunnerProfile } from '../../contexts/AppContext';
+import { useApp } from '../../contexts/AppContext';
 import { connectStrava } from '../../lib/strava';
 
-const DISTANCE_OPTIONS = [
-  { label: '5K', value: '5k' },
-  { label: '10K', value: '10k' },
-  { label: 'Half Marathon', value: 'half' },
-  { label: 'Marathon', value: 'marathon' },
-];
+const DISTANCE_LABELS: Record<string, string> = {
+  '5k': '5K',
+  '10k': '10K',
+  half: 'Half Marathon',
+  marathon: 'Marathon',
+};
 
-const EXPERIENCE_OPTIONS = [
-  { label: 'Beginner', value: 'beginner' },
-  { label: 'Intermediate', value: 'intermediate' },
-  { label: 'Advanced', value: 'advanced' },
-  { label: 'Elite', value: 'elite' },
-];
+const EXPERIENCE_LABELS: Record<string, string> = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
+  elite: 'Elite',
+};
 
-const DURATION_OPTIONS = [
-  { label: '8 weeks', value: '8' },
-  { label: '10 weeks', value: '10' },
-  { label: '12 weeks', value: '12' },
-];
-
-const DAY_OPTIONS = [
-  { label: 'Mon', value: '0' },
-  { label: 'Tue', value: '1' },
-  { label: 'Wed', value: '2' },
-  { label: 'Thu', value: '3' },
-  { label: 'Fri', value: '4' },
-  { label: 'Sat', value: '5' },
-  { label: 'Sun', value: '6' },
-];
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function SettingsScreen() {
-  const { profile, setProfile, stravaToken, setStravaToken } = useApp();
+  const router = useRouter();
+  const { profile, plan, setProfile, stravaToken, setStravaToken, regeneratePlan } = useApp();
   const [connecting, setConnecting] = useState(false);
 
-  const [targetDistance, setTargetDistance] = useState(profile?.targetDistance ?? '5k');
-  const [dontKnowTime, setDontKnowTime] = useState(profile?.fiveKSeconds === null);
-  const [minutes, setMinutes] = useState(
-    profile?.fiveKSeconds ? String(Math.floor(profile.fiveKSeconds / 60)) : ''
-  );
-  const [seconds, setSeconds] = useState(
-    profile?.fiveKSeconds ? String(profile.fiveKSeconds % 60).padStart(2, '0') : ''
-  );
-  const [experienceLevel, setExperienceLevel] = useState(
-    profile?.experienceLevel ?? 'beginner'
-  );
-  const [daysPerWeek, setDaysPerWeek] = useState(profile?.daysPerWeek ?? 4);
-  const [planDuration, setPlanDuration] = useState(
-    String(profile?.planDurationWeeks ?? 12)
-  );
-  const [restDays, setRestDays] = useState<string[]>(
-    profile?.restDays?.map(String) ?? []
-  );
-  const [useImperial, setUseImperial] = useState(profile?.useImperial ?? false);
+  const targetDate = useMemo(() => {
+    if (!plan) return null;
+    // End date is start date + plan duration weeks
+    const start = new Date(plan.startDate + 'T00:00:00');
+    const end = new Date(start);
+    end.setDate(end.getDate() + plan.planDurationWeeks * 7);
+    return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }, [plan]);
 
-  useEffect(() => {
-    if (profile) {
-      setTargetDistance(profile.targetDistance);
-      setDontKnowTime(profile.fiveKSeconds === null);
-      setMinutes(profile.fiveKSeconds ? String(Math.floor(profile.fiveKSeconds / 60)) : '');
-      setSeconds(profile.fiveKSeconds ? String(profile.fiveKSeconds % 60).padStart(2, '0') : '');
-      setExperienceLevel(profile.experienceLevel);
-      setDaysPerWeek(profile.daysPerWeek);
-      setPlanDuration(String(profile.planDurationWeeks));
-      setRestDays(profile.restDays.map(String));
-      setUseImperial(profile.useImperial);
-    }
+  const fiveKDisplay = useMemo(() => {
+    if (!profile?.fiveKSeconds) return 'Not set';
+    const mins = Math.floor(profile.fiveKSeconds / 60);
+    const secs = profile.fiveKSeconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
   }, [profile]);
 
-  const saveProfile = async (overrides: Partial<RunnerProfile> = {}) => {
-    let fiveKSeconds: number | null = null;
-    const currentDontKnow = overrides.fiveKSeconds === undefined ? dontKnowTime : overrides.fiveKSeconds === null;
-    if (!currentDontKnow) {
-      const mins = parseInt(minutes, 10) || 0;
-      const secs = parseInt(seconds, 10) || 0;
-      fiveKSeconds = mins * 60 + secs;
-    }
-
-    const updated: RunnerProfile = {
-      targetDistance: (overrides.targetDistance ?? targetDistance) as RunnerProfile['targetDistance'],
-      fiveKSeconds: overrides.fiveKSeconds !== undefined ? overrides.fiveKSeconds : fiveKSeconds,
-      experienceLevel: (overrides.experienceLevel ?? experienceLevel) as RunnerProfile['experienceLevel'],
-      daysPerWeek: overrides.daysPerWeek ?? daysPerWeek,
-      planDurationWeeks: (overrides.planDurationWeeks ?? parseInt(planDuration, 10)) as 8 | 10 | 12,
-      restDays: overrides.restDays ?? restDays.map(Number),
-      useImperial: overrides.useImperial ?? useImperial,
-    };
-
-    await setProfile(updated);
-  };
+  const restDaysDisplay = useMemo(() => {
+    if (!profile?.restDays || profile.restDays.length === 0) return 'None';
+    return profile.restDays.map((d) => DAY_NAMES[d]).join(', ');
+  }, [profile]);
 
   const handleConnectStrava = async () => {
     setConnecting(true);
@@ -127,143 +78,115 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const handleRegenerate = () => {
+    Alert.alert(
+      'Regenerate Plan',
+      'This will take you through setup again to adjust your objectives. Your current plan and progress will be replaced.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          onPress: () => router.push('/onboarding/profile'),
+        },
+      ],
+    );
+  };
+
+  const handleUnitToggle = async (v: boolean) => {
+    if (!profile) return;
+    await setProfile({ ...profile, useImperial: v });
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text className="text-2xl font-bold text-textPrimary mb-2" style={styles.tracking}>
+        <Text className="text-2xl font-bold text-textPrimary mb-6" style={styles.tracking}>
           Settings
         </Text>
 
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Target distance
-        </Text>
-        <ChipSelector
-          options={DISTANCE_OPTIONS}
-          selected={targetDistance}
-          onSelect={(v) => {
-            setTargetDistance(v as RunnerProfile['targetDistance']);
-            saveProfile({ targetDistance: v as RunnerProfile['targetDistance'] });
-          }}
-        />
-
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Recent 5K time
-        </Text>
+        {/* Your Objective card */}
         <Card>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-[15px] font-medium text-textPrimary">I don't know my time</Text>
-            <Switch
-              value={dontKnowTime}
-              onValueChange={(v) => {
-                setDontKnowTime(v);
-                if (v) saveProfile({ fiveKSeconds: null });
-              }}
-              trackColor={{ false: Colors.border, true: Colors.primary }}
-              thumbColor={Colors.text}
-            />
-          </View>
-          {!dontKnowTime && (
-            <View className="mt-4 items-center">
-              <TimeInput
-                minutes={minutes}
-                seconds={seconds}
-                onChangeMinutes={(v) => setMinutes(v)}
-                onChangeSeconds={(v) => setSeconds(v)}
-              />
+          <View className="flex-row items-center mb-4" style={styles.objectiveHeader}>
+            <View className="w-11 h-11 rounded-[14px] bg-surfaceLight justify-center items-center">
+              <Feather name="target" size={20} color={Colors.primary} />
             </View>
-          )}
+            <View className="flex-1">
+              <Text className="text-base font-bold text-textPrimary">Your Objective</Text>
+              <Text className="text-[13px] text-textMuted mt-0.5">
+                {DISTANCE_LABELS[profile?.targetDistance ?? ''] ?? '—'}
+                {targetDate ? ` · ${targetDate}` : ''}
+              </Text>
+            </View>
+          </View>
+
+          {/* Parameter labels */}
+          <View style={styles.paramGrid}>
+            <View className="flex-row items-center justify-between py-2.5" style={styles.paramRow}>
+              <Text className="text-[13px] text-textMuted">Experience</Text>
+              <Text className="text-[13px] font-semibold text-textSecondary">
+                {EXPERIENCE_LABELS[profile?.experienceLevel ?? ''] ?? '—'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2.5" style={styles.paramRow}>
+              <Text className="text-[13px] text-textMuted">5K Time</Text>
+              <Text className="text-[13px] font-semibold text-textSecondary">{fiveKDisplay}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2.5" style={styles.paramRow}>
+              <Text className="text-[13px] text-textMuted">Days / week</Text>
+              <Text className="text-[13px] font-semibold text-textSecondary">
+                {profile?.daysPerWeek ?? '—'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2.5" style={styles.paramRow}>
+              <Text className="text-[13px] text-textMuted">Plan duration</Text>
+              <Text className="text-[13px] font-semibold text-textSecondary">
+                {profile?.planDurationWeeks ?? '—'} weeks
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2.5" style={styles.paramRow}>
+              <Text className="text-[13px] text-textMuted">Rest days</Text>
+              <Text className="text-[13px] font-semibold text-textSecondary">{restDaysDisplay}</Text>
+            </View>
+          </View>
         </Card>
 
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Experience level
-        </Text>
-        <ChipSelector
-          options={EXPERIENCE_OPTIONS}
-          selected={experienceLevel}
-          onSelect={(v) => {
-            setExperienceLevel(v as RunnerProfile['experienceLevel']);
-            saveProfile({ experienceLevel: v as RunnerProfile['experienceLevel'] });
-          }}
-        />
-
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Days per week
-        </Text>
-        <View className="flex-row justify-between items-center bg-surface rounded-2xl p-1.5 border border-divider">
-          {[3, 4, 5, 6, 7].map((n) => (
-            <TouchableOpacity
-              key={n}
-              className={`flex-1 items-center py-3.5 rounded-xl ${
-                n === daysPerWeek ? 'bg-accent' : ''
-              }`}
-              onPress={() => {
-                setDaysPerWeek(n);
-                saveProfile({ daysPerWeek: n });
-              }}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={`text-lg font-bold ${
-                  n === daysPerWeek ? 'text-bg' : 'text-textMuted'
-                }`}
-              >
-                {n}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* Regenerate */}
+        <View className="mt-5">
+          <PrimaryButton
+            title="Regenerate Plan"
+            icon="refresh-cw"
+            variant="secondary"
+            onPress={handleRegenerate}
+          />
         </View>
 
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Plan duration
-        </Text>
-        <ChipSelector
-          options={DURATION_OPTIONS}
-          selected={planDuration}
-          onSelect={(v) => {
-            setPlanDuration(v);
-            saveProfile({ planDurationWeeks: parseInt(v, 10) as 8 | 10 | 12 });
-          }}
-        />
-
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
-          Rest days
-        </Text>
-        <ChipSelector
-          options={DAY_OPTIONS}
-          selected={null}
-          onSelect={() => {}}
-          multi
-          selectedValues={restDays}
-          onMultiSelect={(v) => {
-            setRestDays(v);
-            saveProfile({ restDays: v.map(Number) });
-          }}
-        />
-
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+        {/* Units */}
+        <Text className="text-base font-semibold text-textSecondary mt-8 mb-3">
           Units
         </Text>
         <Card>
           <View className="flex-row items-center justify-between">
             <Text className="text-[15px] font-medium text-textPrimary">
-              {useImperial ? 'Miles' : 'Kilometres'}
+              {profile?.useImperial ? 'Miles' : 'Kilometres'}
             </Text>
             <Switch
-              value={useImperial}
-              onValueChange={(v) => {
-                setUseImperial(v);
-                saveProfile({ useImperial: v });
-              }}
+              value={profile?.useImperial ?? false}
+              onValueChange={handleUnitToggle}
               trackColor={{ false: Colors.border, true: Colors.primary }}
               thumbColor={Colors.text}
             />
           </View>
         </Card>
 
-        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+        {/* Integrations */}
+        <Text className="text-base font-semibold text-textSecondary mt-8 mb-3">
           Integrations
         </Text>
         <Card>
@@ -299,17 +222,6 @@ export default function SettingsScreen() {
             )}
           </View>
         </Card>
-
-        <View className="mt-8">
-          <PrimaryButton
-            title="Regenerate Plan"
-            icon="refresh-cw"
-            variant="secondary"
-            onPress={() =>
-              Alert.alert('Coming soon', 'Plan regeneration coming soon.')
-            }
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -323,6 +235,19 @@ const styles = StyleSheet.create({
   },
   tracking: {
     letterSpacing: -0.3,
+  },
+  objectiveHeader: {
+    gap: 14,
+  },
+  paramGrid: {
+    marginTop: 4,
+  },
+  paramRow: {
+    paddingHorizontal: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
   },
   stravaGap: {
     gap: 14,

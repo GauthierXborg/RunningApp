@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { Alert } from 'react-native';
 import { getItem, setItem, removeItem, clearAll as clearStorage, KEYS } from '../lib/storage';
+import { generateTrainingPlan } from '../lib/planGenerator';
+import type { TrainingPlan } from '../lib/planGenerator';
 import type { StravaToken } from '../lib/strava';
+
+export type { TrainingPlan };
 
 export interface RunnerProfile {
   targetDistance: '5k' | '10k' | 'half' | 'marathon';
@@ -10,12 +15,6 @@ export interface RunnerProfile {
   planDurationWeeks: 8 | 10 | 12;
   restDays: number[];
   useImperial: boolean;
-}
-
-export interface TrainingPlan {
-  id: string;
-  createdAt: string;
-  weeks: any[];
 }
 
 interface AppState {
@@ -31,6 +30,7 @@ interface AppContextType extends AppState {
   setPlan: (plan: TrainingPlan) => Promise<void>;
   setStravaToken: (token: StravaToken | null) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  regeneratePlan: () => Promise<void>;
   clearAll: () => Promise<void>;
 }
 
@@ -82,10 +82,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, stravaToken: token }));
   }, []);
 
+  const regeneratePlan = useCallback(async () => {
+    const currentProfile = state.profile;
+    if (!currentProfile) return;
+    const result = generateTrainingPlan(currentProfile);
+    if ('error' in result) {
+      Alert.alert('Cannot generate plan', result.error);
+      return;
+    }
+    await setItem(KEYS.PLAN, result);
+    setState((prev) => ({ ...prev, plan: result }));
+  }, [state.profile]);
+
   const completeOnboarding = useCallback(async () => {
     await setItem(KEYS.ONBOARDING_COMPLETE, true);
+    // Generate plan immediately
+    const currentProfile = state.profile;
+    if (currentProfile) {
+      const result = generateTrainingPlan(currentProfile);
+      if (!('error' in result)) {
+        await setItem(KEYS.PLAN, result);
+        setState((prev) => ({ ...prev, onboardingComplete: true, plan: result }));
+        return;
+      }
+    }
     setState((prev) => ({ ...prev, onboardingComplete: true }));
-  }, []);
+  }, [state.profile]);
 
   const clearAll = useCallback(async () => {
     await clearStorage();
@@ -100,7 +122,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ ...state, setProfile, setPlan, setStravaToken, completeOnboarding, clearAll }}
+      value={{ ...state, setProfile, setPlan, setStravaToken, completeOnboarding, regeneratePlan, clearAll }}
     >
       {children}
     </AppContext.Provider>
