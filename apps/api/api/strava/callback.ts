@@ -1,11 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// In-memory token store (works within the same instance)
-// For production, use Vercel KV or a database
-const tokenStore = new Map<string, Record<string, unknown>>();
-
-// Export for use by the token endpoint
-export { tokenStore };
+import { storeToken } from '../../lib/tokenStore';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, state } = req.query;
@@ -39,15 +33,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await response.json();
 
-    tokenStore.set(state, {
+    storeToken(state, {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
       expires_at: data.expires_at,
       athlete_id: data.athlete?.id,
     });
-
-    // Auto-cleanup after 5 minutes
-    setTimeout(() => tokenStore.delete(state), 5 * 60 * 1000);
 
     res.setHeader('Content-Type', 'text/html');
     res.status(200).send(`
