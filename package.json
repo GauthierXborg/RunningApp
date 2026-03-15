@@ -1,8 +1,4 @@
 {
   "name": "running-app",
-  "private": true,
-  "workspaces": [
-    "apps/mobile",
-    "apps/api"
-  ]
+  "private": true
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ChipSelector } from '../../components/ChipSelector';
 import { TimeInput } from '../../components/TimeInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { Card } from '../../components/Card';
 import { Colors } from '../../constants/colors';
 import { useApp } from '../../contexts/AppContext';
 
@@ -75,60 +76,84 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-bg" edges={['bottom']}>
       <ScrollView
-        style={styles.scroll}
+        className="flex-1"
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Target distance</Text>
+        <Text className="text-2xl font-bold text-textPrimary" style={styles.tracking}>
+          Tell us about yourself
+        </Text>
+        <Text className="text-[15px] text-textMuted mt-1 mb-2">
+          We'll use this to build your personalized plan
+        </Text>
+
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Target distance
+        </Text>
         <ChipSelector
           options={DISTANCE_OPTIONS}
           selected={targetDistance}
           onSelect={setTargetDistance}
         />
 
-        <Text style={styles.sectionTitle}>Recent 5K time</Text>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>I don't know</Text>
-          <Switch
-            value={dontKnowTime}
-            onValueChange={setDontKnowTime}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor={Colors.text}
-          />
-        </View>
-        {!dontKnowTime && (
-          <TimeInput
-            minutes={minutes}
-            seconds={seconds}
-            onChangeMinutes={setMinutes}
-            onChangeSeconds={setSeconds}
-          />
-        )}
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Recent 5K time
+        </Text>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-[15px] font-medium text-textPrimary">
+              I don't know my time
+            </Text>
+            <Switch
+              value={dontKnowTime}
+              onValueChange={setDontKnowTime}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.text}
+            />
+          </View>
+          {!dontKnowTime && (
+            <View className="mt-4 items-center">
+              <TimeInput
+                minutes={minutes}
+                seconds={seconds}
+                onChangeMinutes={setMinutes}
+                onChangeSeconds={setSeconds}
+              />
+            </View>
+          )}
+        </Card>
 
-        <Text style={styles.sectionTitle}>Experience level</Text>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Experience level
+        </Text>
         <ChipSelector
           options={EXPERIENCE_OPTIONS}
           selected={experienceLevel}
           onSelect={setExperienceLevel}
         />
 
-        <Text style={styles.sectionTitle}>Units</Text>
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>
-            {useImperial ? 'Miles' : 'Kilometres'}
-          </Text>
-          <Switch
-            value={useImperial}
-            onValueChange={setUseImperial}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor={Colors.text}
-          />
-        </View>
+        <Text className="text-base font-semibold text-textSecondary mt-7 mb-3">
+          Units
+        </Text>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-[15px] font-medium text-textPrimary">
+              {useImperial ? 'Miles' : 'Kilometres'}
+            </Text>
+            <Switch
+              value={useImperial}
+              onValueChange={setUseImperial}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.text}
+            />
+          </View>
+        </Card>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View className="px-6 pb-4 pt-2">
         <PrimaryButton title="Continue" onPress={handleContinue} />
       </View>
     </SafeAreaView>
@@ -136,37 +161,12 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  toggleLabel: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+  tracking: {
+    letterSpacing: -0.3,
   },
 });

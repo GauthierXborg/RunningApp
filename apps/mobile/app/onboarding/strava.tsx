@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { Card } from '../../components/Card';
 import { Colors } from '../../constants/colors';
 import { useApp } from '../../contexts/AppContext';
 import { connectStrava } from '../../lib/strava';
@@ -37,28 +38,56 @@ export default function StravaScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.content}>
-        <View style={styles.center}>
-          <View style={styles.iconContainer}>
-            <Feather name="link" size={48} color="#FC4C02" />
+    <SafeAreaView className="flex-1 bg-bg" edges={['bottom']}>
+      <View className="flex-1 px-6 justify-between">
+        <View className="flex-1 justify-center items-center">
+          <View style={styles.iconRing} className="mb-6">
+            <View className="w-[72px] h-[72px] rounded-full bg-surface justify-center items-center">
+              <Feather name="link" size={36} color="#FC4C02" />
+            </View>
           </View>
-          <Text style={styles.title}>Connect Strava</Text>
-          <Text style={styles.description}>
-            Connect Strava to automatically sync your completed runs. Your training
-            plan works without it — you can always connect later.
+          <Text className="text-[26px] font-bold text-textPrimary mb-6" style={styles.tracking}>
+            Connect Strava
           </Text>
+
+          <Card style={styles.infoCard}>
+            <View className="flex-row items-center" style={styles.infoGap}>
+              <View className="w-9 h-9 rounded-xl bg-surfaceLight justify-center items-center">
+                <Feather name="refresh-cw" size={18} color={Colors.primary} />
+              </View>
+              <Text className="text-[15px] font-medium text-textSecondary flex-1">
+                Auto-sync your completed runs
+              </Text>
+            </View>
+            <View className="flex-row items-center" style={styles.infoGap}>
+              <View className="w-9 h-9 rounded-xl bg-surfaceLight justify-center items-center">
+                <Feather name="bar-chart-2" size={18} color={Colors.primary} />
+              </View>
+              <Text className="text-[15px] font-medium text-textSecondary flex-1">
+                Track progress automatically
+              </Text>
+            </View>
+            <View className="flex-row items-center" style={styles.infoGap}>
+              <View className="w-9 h-9 rounded-xl bg-surfaceLight justify-center items-center">
+                <Feather name="clock" size={18} color={Colors.primary} />
+              </View>
+              <Text className="text-[15px] font-medium text-textSecondary flex-1">
+                Works without it -- connect anytime
+              </Text>
+            </View>
+          </Card>
         </View>
 
-        <View style={styles.footer}>
+        <View className="pb-8 items-center">
           <PrimaryButton
             title="Connect Strava"
+            icon="link"
             onPress={handleConnect}
             loading={connecting}
           />
-          <Text style={styles.skipText} onPress={handleSkip}>
-            Skip for now
-          </Text>
+          <TouchableOpacity onPress={handleSkip} className="mt-4 py-2.5 px-5">
+            <Text className="text-[15px] font-medium text-textMuted">Skip for now</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -66,50 +95,23 @@ export default function StravaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'space-between',
-  },
-  center: {
-    flex: 1,
+  iconRing: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
+  tracking: {
+    letterSpacing: -0.3,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 16,
+  infoCard: {
+    width: '100%',
+    gap: 16,
   },
-  description: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
-  footer: {
-    paddingBottom: 32,
-    alignItems: 'center',
-  },
-  skipText: {
-    fontSize: 15,
-    color: Colors.textMuted,
-    marginTop: 16,
-    paddingVertical: 8,
+  infoGap: {
+    gap: 14,
   },
 });

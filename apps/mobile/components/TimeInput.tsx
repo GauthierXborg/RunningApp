@@ -16,9 +16,10 @@ export function TimeInput({
   onChangeSeconds,
 }: TimeInputProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.inputGroup}>
+    <View className="flex-row items-center" style={styles.gap}>
+      <View className="items-center">
         <TextInput
+          className="bg-surface rounded-2xl border-[1.5px] border-divider text-textPrimary text-center font-bold"
           style={styles.input}
           value={minutes}
           onChangeText={onChangeMinutes}
@@ -27,11 +28,12 @@ export function TimeInput({
           placeholder="00"
           placeholderTextColor={Colors.textMuted}
         />
-        <Text style={styles.label}>min</Text>
+        <Text className="text-[13px] font-medium text-textMuted mt-1.5">min</Text>
       </View>
-      <Text style={styles.separator}>:</Text>
-      <View style={styles.inputGroup}>
+      <Text className="text-[28px] font-bold text-textMuted" style={styles.separator}>:</Text>
+      <View className="items-center">
         <TextInput
+          className="bg-surface rounded-2xl border-[1.5px] border-divider text-textPrimary text-center font-bold"
           style={styles.input}
           value={seconds}
           onChangeText={onChangeSeconds}
@@ -40,43 +42,23 @@ export function TimeInput({
           placeholder="00"
           placeholderTextColor={Colors.textMuted}
         />
-        <Text style={styles.label}>sec</Text>
+        <Text className="text-[13px] font-medium text-textMuted mt-1.5">sec</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  inputGroup: {
-    alignItems: 'center',
+  gap: {
+    gap: 12,
   },
   input: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
-    fontSize: 24,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: 72,
-    height: 56,
+    fontSize: 28,
+    width: 80,
+    height: 64,
     paddingHorizontal: 8,
   },
-  label: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 4,
-  },
   separator: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 20,
+    marginBottom: 22,
   },
 });
