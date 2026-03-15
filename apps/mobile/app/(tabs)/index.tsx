@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useApp } from '../../contexts/AppContext';
-import { generateState, openStravaAuth, pollForToken, fetchActivities } from '../../lib/strava';
+import { connectStrava, fetchActivities } from '../../lib/strava';
 
 const DISTANCE_LABELS: Record<string, string> = {
   '5k': '5K',
@@ -35,9 +35,7 @@ export default function HomeScreen() {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      const state = generateState();
-      await openStravaAuth(state);
-      const token = await pollForToken(state);
+      const token = await connectStrava();
       if (token) {
         await setStravaToken(token);
       } else {

@@ -6,7 +6,7 @@ import { ChipSelector } from '../../components/ChipSelector';
 import { TimeInput } from '../../components/TimeInput';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useApp, RunnerProfile } from '../../contexts/AppContext';
-import { generateState, openStravaAuth, pollForToken } from '../../lib/strava';
+import { connectStrava } from '../../lib/strava';
 
 const DISTANCE_OPTIONS = [
   { label: '5K', value: '5k' },
@@ -102,9 +102,7 @@ export default function SettingsScreen() {
   const handleConnectStrava = async () => {
     setConnecting(true);
     try {
-      const state = generateState();
-      await openStravaAuth(state);
-      const token = await pollForToken(state);
+      const token = await connectStrava();
       if (token) {
         await setStravaToken(token);
       } else {

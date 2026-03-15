@@ -1,4 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 const STRAVA_CLIENT_ID = process.env.EXPO_PUBLIC_STRAVA_CLIENT_ID || '';
@@ -39,31 +41,61 @@ export function getStravaAuthUrl(state: string): string {
   return `https://www.strava.com/oauth/authorize?${params.toString()}`;
 }
 
-export async function openStravaAuth(state: string): Promise<void> {
-  const url = getStravaAuthUrl(state);
-  await WebBrowser.openBrowserAsync(url);
+export function parseTokenFromUrl(url: string): StravaToken | null {
+  try {
+    const parsed = Linking.parse(url);
+    const tokenParam = parsed.queryParams?.token;
+    if (!tokenParam || typeof tokenParam !== 'string') return null;
+    const decoded = JSON.parse(atob(tokenParam));
+    return {
+      accessToken: decoded.access_token,
+      refreshToken: decoded.refresh_token,
+      expiresAt: decoded.expires_at,
+      athleteId: decoded.athlete_id,
+    };
+  } catch {
+    return null;
+  }
 }
 
-export async function pollForToken(state: string): Promise<StravaToken | null> {
-  const maxAttempts = 30;
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    try {
-      const response = await fetch(`${API_URL}/api/strava/token/${state}`);
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token,
-          expiresAt: data.expires_at,
-          athleteId: data.athlete_id,
-        };
+export async function connectStrava(): Promise<StravaToken | null> {
+  const state = generateState();
+  const authUrl = getStravaAuthUrl(state);
+
+  // Set up a listener for the deep link redirect
+  return new Promise<StravaToken | null>(async (resolve) => {
+    let resolved = false;
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      if (resolved) return;
+      const token = parseTokenFromUrl(event.url);
+      if (token) {
+        resolved = true;
+        subscription.remove();
+        WebBrowser.dismissBrowser();
+        resolve(token);
       }
-    } catch {
-      // continue polling
+    });
+
+    const result = await WebBrowser.openAuthSessionAsync(
+      authUrl,
+      'running-app://strava-callback'
+    );
+
+    // If the browser was dismissed without completing, resolve null
+    if (!resolved) {
+      resolved = true;
+      subscription.remove();
+
+      // Check if the result contains the redirect URL (some platforms return it)
+      if (result.type === 'success' && result.url) {
+        const token = parseTokenFromUrl(result.url);
+        resolve(token);
+      } else {
+        resolve(null);
+      }
     }
-  }
-  return null;
+  });
 }
 
 export async function refreshToken(token: StravaToken): Promise<StravaToken> {

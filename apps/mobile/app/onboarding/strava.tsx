@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { Colors } from '../../constants/colors';
 import { useApp } from '../../contexts/AppContext';
-import { generateState, openStravaAuth, pollForToken } from '../../lib/strava';
+import { connectStrava } from '../../lib/strava';
 
 export default function StravaScreen() {
   const router = useRouter();
@@ -16,9 +16,7 @@ export default function StravaScreen() {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      const state = generateState();
-      await openStravaAuth(state);
-      const token = await pollForToken(state);
+      const token = await connectStrava();
       if (token) {
         await setStravaToken(token);
         await completeOnboarding();
