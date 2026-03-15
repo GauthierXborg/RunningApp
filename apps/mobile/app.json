@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "RunningApp",
+    "slug": "running-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "running-app",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#1A1A2E",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.runningapp.mobile",
+      "usesAppleSignIn": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-apple-authentication"
+    ]
+  }
+}
